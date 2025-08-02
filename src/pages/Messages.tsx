@@ -518,8 +518,8 @@ export default function Messages() {
         </Card>
       </div>
 
-      {/* SMS Feature Info */}
-      <Card>
+      {/* SMS Feature Info - Hidden on mobile */}
+      <Card className="hidden sm:block">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Phone className="h-5 w-5" />
