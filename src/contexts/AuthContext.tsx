@@ -8,7 +8,7 @@ interface AuthContextType {
   loading: boolean;
   userRole: string | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, profileData?: { university?: string; city?: string; biNumber?: string }) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, profileData?: { university?: string; city?: string; biNumber?: string }) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
@@ -122,6 +122,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (profileError) {
           console.error('Profile creation error:', profileError);
+        }
+
+        // Create extended profile if additional data is provided
+        if (profileData && (profileData.university || profileData.city || profileData.biNumber)) {
+          const { error: extendedProfileError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: data.user.id,
+              university: profileData.university || null,
+              city: profileData.city || null,
+              bi_number: profileData.biNumber || null,
+            });
+
+          if (extendedProfileError) {
+            console.error('Extended profile creation error:', extendedProfileError);
+          }
         }
       }
 
