@@ -268,7 +268,7 @@ export default function Documents() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
               <Input
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
@@ -278,18 +278,19 @@ export default function Documents() {
               <select
                 value={documentTypeId}
                 onChange={(e) => setDocumentTypeId(Number(e.target.value))}
-                className="border rounded px-3 py-2"
+                className="border rounded px-3 py-2 bg-background"
               >
                 {documentTypes.map((type) => (
                   <option key={type.id} value={type.id}>
                     {type.name}
                   </option>
                 ))}
+                <option value="0">Outros</option>
               </select>
               <Button
                 onClick={handleFileUpload}
                 disabled={!file || uploadLoading}
-                className="shrink-0"
+                className="w-full sm:w-auto"
               >
                 <Upload className="w-4 h-4 mr-2" />
                 {uploadLoading ? 'Enviando...' : 'Enviar'}
@@ -312,7 +313,7 @@ export default function Documents() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {documentTypes.filter(type => type.required).map((docType) => {
                 const hasDocument = documents.some(doc => 
                   doc.document_type_id === docType.id && doc.status === 'approved'
@@ -345,31 +346,31 @@ export default function Documents() {
           filteredDocuments.map((document) => (
             <Card key={document.id} className={`${document.status === 'rejected' ? 'border-red-200' : ''}`}>
               <CardContent className="pt-6">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <FileText className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{document.document_types?.name || 'Documento'}</h3>
-                      {isAdmin && (
-                        <p className="text-sm text-muted-foreground">Por: {document.users?.full_name}</p>
-                      )}
-                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Enviado: {new Date(document.created_at).toLocaleDateString('pt-BR')}
-                        </span>
-                        {document.expires_at && (
-                          <span className={`flex items-center gap-1 ${isExpiringSoon(document.expires_at) ? 'text-yellow-600 font-medium' : ''}`}>
-                            <Calendar className="h-3 w-3" />
-                            Expira: {new Date(document.expires_at).toLocaleDateString('pt-BR')}
-                            {isExpiringSoon(document.expires_at) && (
-                              <AlertCircle className="h-3 w-3 text-yellow-500" />
-                            )}
-                          </span>
-                        )}
+                  <div className="flex flex-col sm:flex-row sm:items-start lg:items-center justify-between gap-4">
+                    <div className="flex items-start gap-3 sm:gap-4 flex-1">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
+                        <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-base sm:text-lg truncate">{document.document_types?.name || 'Documento'}</h3>
+                        {isAdmin && (
+                          <p className="text-sm text-muted-foreground truncate">Por: {document.users?.full_name}</p>
+                        )}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Enviado: {new Date(document.created_at).toLocaleDateString('pt-BR')}
+                          </span>
+                          {document.expires_at && (
+                            <span className={`flex items-center gap-1 ${isExpiringSoon(document.expires_at) ? 'text-yellow-600 font-medium' : ''}`}>
+                              <Calendar className="h-3 w-3" />
+                              Expira: {new Date(document.expires_at).toLocaleDateString('pt-BR')}
+                              {isExpiringSoon(document.expires_at) && (
+                                <AlertCircle className="h-3 w-3 text-yellow-500" />
+                              )}
+                            </span>
+                          )}
+                        </div>
                       {document.status === 'rejected' && document.verification_notes && (
                         <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                           <p className="text-sm text-red-700">
@@ -380,16 +381,16 @@ export default function Documents() {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col items-end gap-3">
+                  <div className="flex flex-col sm:items-end gap-3 sm:shrink-0">
                     {getStatusBadge(document.status)}
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" asChild>
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" asChild className="text-xs">
                         <a href={document.file_url} target="_blank" rel="noopener noreferrer">
                           <Eye className="h-3 w-3 mr-1" />
                           Ver
                         </a>
                       </Button>
-                      <Button variant="outline" size="sm" asChild>
+                      <Button variant="outline" size="sm" asChild className="text-xs">
                         <a href={document.file_url} download>
                           <Download className="h-3 w-3 mr-1" />
                           Baixar
@@ -400,7 +401,7 @@ export default function Documents() {
                           <Button
                             size="sm"
                             onClick={() => updateDocumentStatus(document.id, 'approved')}
-                            className="bg-green-600 hover:bg-green-700"
+                            className="bg-green-600 hover:bg-green-700 text-xs"
                           >
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Aprovar
@@ -409,6 +410,7 @@ export default function Documents() {
                             size="sm"
                             variant="destructive"
                             onClick={() => updateDocumentStatus(document.id, 'rejected', 'Documento rejeitado')}
+                            className="text-xs"
                           >
                             <XCircle className="h-3 w-3 mr-1" />
                             Rejeitar
@@ -416,7 +418,7 @@ export default function Documents() {
                         </>
                       )}
                       {document.status === 'rejected' && (
-                        <Button size="sm" className="flex items-center gap-1">
+                        <Button size="sm" className="flex items-center gap-1 text-xs">
                           <Upload className="h-3 w-3" />
                           Reenviar
                         </Button>
