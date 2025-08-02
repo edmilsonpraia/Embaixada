@@ -97,34 +97,36 @@ export default function Announcements() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Anúncios</h1>
-        <p className="text-muted-foreground">
+    <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="px-1">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Anúncios</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Fique por dentro das últimas novidades e comunicados importantes
         </p>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-3 sm:gap-4">
         {announcements.map((announcement) => (
           <Card key={announcement.id} className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
-                  {getPriorityIcon(announcement.priority)}
-                  <div>
-                    <CardTitle className="text-xl">{announcement.title}</CardTitle>
-                    <CardDescription className="flex items-center space-x-4 mt-2">
-                      <span className="flex items-center space-x-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>
+            <CardHeader className="p-4 sm:p-6">
+              <div className="flex flex-col space-y-3 sm:flex-row sm:items-start sm:justify-between sm:space-y-0">
+                <div className="flex items-start space-x-2 sm:space-x-3 flex-1 min-w-0">
+                  <div className="flex-shrink-0 mt-0.5">
+                    {getPriorityIcon(announcement.priority)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg sm:text-xl break-words">{announcement.title}</CardTitle>
+                    <CardDescription className="flex flex-col space-y-1 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4 mt-2">
+                      <span className="flex items-center space-x-1 text-xs sm:text-sm">
+                        <Calendar className="h-3 w-3 flex-shrink-0" />
+                        <span className="truncate">
                           Publicado em {new Date(announcement.created_at).toLocaleDateString('pt-BR')}
                         </span>
                       </span>
                       {announcement.expires_at && (
-                        <span className="flex items-center space-x-1">
-                          <Clock className="h-3 w-3" />
-                          <span>
+                        <span className="flex items-center space-x-1 text-xs sm:text-sm">
+                          <Clock className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">
                             Válido até {new Date(announcement.expires_at).toLocaleDateString('pt-BR')}
                           </span>
                         </span>
@@ -132,27 +134,27 @@ export default function Announcements() {
                     </CardDescription>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 flex-shrink-0">
                   {getPriorityBadge(announcement.priority)}
                   {announcement.send_as_sms && (
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 text-xs">
                       SMS
                     </Badge>
                   )}
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6 pt-0">
               <div className="prose prose-sm max-w-none">
-                <p className="text-foreground leading-relaxed">
+                <p className="text-foreground leading-relaxed text-sm sm:text-base">
                   {announcement.content}
                 </p>
               </div>
               
               {announcement.expires_at && (
-                <div className="mt-4 p-3 bg-muted/50 rounded-lg border-l-4 border-orange-400">
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
+                <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-muted/50 rounded-lg border-l-4 border-orange-400">
+                  <div className="flex items-center space-x-2 text-xs sm:text-sm text-muted-foreground">
+                    <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                     <span>
                       Este anúncio expira em {' '}
                       {new Date(announcement.expires_at).toLocaleDateString('pt-BR')}
