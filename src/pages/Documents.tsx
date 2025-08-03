@@ -199,6 +199,34 @@ export default function Documents() {
     }
   };
 
+  const downloadDocument = async (fileUrl: string, fileName: string) => {
+    try {
+      const response = await fetch(fileUrl);
+      const blob = await response.blob();
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName || 'documento';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Sucesso',
+        description: 'Download do documento iniciado!',
+      });
+    } catch (error: any) {
+      console.error('Error downloading document:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao fazer download do documento',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
@@ -390,11 +418,17 @@ export default function Documents() {
                           Ver
                         </a>
                       </Button>
-                      <Button variant="outline" size="sm" asChild className="text-xs">
-                        <a href={document.file_url} download>
-                          <Download className="h-3 w-3 mr-1" />
-                          Baixar
-                        </a>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-xs"
+                        onClick={() => downloadDocument(
+                          document.file_url, 
+                          `${document.document_types?.name || 'documento'}_${document.users?.full_name || 'usuario'}.${document.file_url.split('.').pop()}`
+                        )}
+                      >
+                        <Download className="h-3 w-3 mr-1" />
+                        Baixar
                       </Button>
                       {isAdmin && document.status === 'pending' && (
                         <>
