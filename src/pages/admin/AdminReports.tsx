@@ -3,9 +3,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { BarChart3, Download, Users, FileText, TrendingUp, Calendar } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { BarChart3, Download, Users, FileText, TrendingUp, Calendar, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+
+interface UserData {
+  id: string;
+  full_name: string;
+  email: string;
+  created_at: string;
+  role: string;
+  university?: string;
+  city?: string;
+  bi_number?: string;
+}
 
 export default function AdminReports() {
   const [loading, setLoading] = useState(true);
@@ -17,11 +30,14 @@ export default function AdminReports() {
     rejectedDocuments: 0,
     recentActivity: []
   });
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [searchUsers, setSearchUsers] = useState('');
   const [dateRange, setDateRange] = useState('30');
   const { toast } = useToast();
 
   useEffect(() => {
     fetchReportData();
+    fetchUsers();
   }, [dateRange]);
 
   const fetchReportData = async () => {
@@ -30,7 +46,7 @@ export default function AdminReports() {
       
       // Fetch users count
       const { count: usersCount } = await supabase
-        .from('profiles')
+        .from('users')
         .select('*', { count: 'exact', head: true });
 
       // Fetch documents stats
@@ -63,6 +79,39 @@ export default function AdminReports() {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select(`
+          id,
+          full_name,
+          email,
+          created_at,
+          role,
+          profiles!inner(university, city, bi_number)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedUsers = data?.map(user => ({
+        id: user.id,
+        full_name: user.full_name,
+        email: user.email,
+        created_at: user.created_at,
+        role: user.role,
+        university: user.profiles?.university || 'Não informado',
+        city: user.profiles?.city || 'Não informado',
+        bi_number: user.profiles?.bi_number || 'Não informado'
+      })) || [];
+
+      setUsers(formattedUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
   const exportReport = () => {
     const csvContent = `Tipo,Valor
 Usuários Totais,${reportData.totalUsers}
@@ -84,6 +133,33 @@ Documentos Rejeitados,${reportData.rejectedDocuments}`;
       description: 'Relatório exportado com sucesso',
     });
   };
+
+  const exportUsersReport = () => {
+    const csvContent = `Nome,Email,Universidade,Cidade,BI,Tipo,Data de Registro
+${filteredUsers.map(user => 
+  `"${user.full_name}","${user.email}","${user.university}","${user.city}","${user.bi_number}","${user.role}","${new Date(user.created_at).toLocaleDateString('pt-BR')}"`
+).join('\n')}`;
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `usuarios_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: 'Sucesso',
+      description: 'Lista de usuários exportada com sucesso',
+    });
+  };
+
+  const filteredUsers = users.filter(user =>
+    user.full_name.toLowerCase().includes(searchUsers.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchUsers.toLowerCase()) ||
+    user.university?.toLowerCase().includes(searchUsers.toLowerCase()) ||
+    user.city?.toLowerCase().includes(searchUsers.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -250,6 +326,96 @@ Documentos Rejeitados,${reportData.rejectedDocuments}`;
           </CardContent>
         </Card>
       </div>
+
+      {/* Tabela de Usuários Registrados */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <CardTitle>Usuários Registrados</CardTitle>
+              <CardDescription>Lista completa de todos os usuários do sistema</CardDescription>
+            </div>
+            <Button onClick={exportUsersReport} className="w-full sm:w-auto">
+              <Download className="h-4 w-4 mr-2" />
+              Exportar Lista
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Pesquisar usuários..."
+                value={searchUsers}
+                onChange={(e) => setSearchUsers(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Users Table */}
+            <div className="rounded-md border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead className="hidden sm:table-cell">Universidade</TableHead>
+                    <TableHead className="hidden md:table-cell">Cidade</TableHead>
+                    <TableHead className="hidden lg:table-cell">BI</TableHead>
+                    <TableHead className="hidden sm:table-cell">Tipo</TableHead>
+                    <TableHead>Data de Registro</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.full_name}</TableCell>
+                      <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                      <TableCell className="hidden sm:table-cell text-muted-foreground">
+                        {user.university}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground">
+                        {user.city}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell text-muted-foreground">
+                        {user.bi_number}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                          {user.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(user.created_at).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Empty State */}
+            {filteredUsers.length === 0 && (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Nenhum usuário encontrado</h3>
+                <p className="text-muted-foreground">
+                  {searchUsers ? 'Tente ajustar os filtros de pesquisa' : 'Nenhum usuário foi registrado ainda'}
+                </p>
+              </div>
+            )}
+
+            {/* Pagination Info */}
+            {filteredUsers.length > 0 && (
+              <div className="text-sm text-muted-foreground text-center">
+                Mostrando {filteredUsers.length} de {users.length} usuários
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
